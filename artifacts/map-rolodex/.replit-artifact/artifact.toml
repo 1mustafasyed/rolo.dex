@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Map Rolodex"
+description = "A private map of professional contacts by city, with Supabase sign-in, clustered pins, contact details, and simple contact management."
+version = "1.0.0"
+id = "artifacts/map-rolodex"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25959
+
+[services.development]
+run = "pnpm --filter @workspace/map-rolodex run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/map-rolodex", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/map-rolodex/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25959"
+BASE_PATH = "/"
