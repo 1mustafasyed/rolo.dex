@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'maplibre-gl/dist/maplibre-gl.css';
+@import 'mapbox-gl/dist/mapbox-gl.css';
 
 :root, .dark {
   --background: 206 28% 9%;
@@ -82,6 +82,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .map-stage { position: fixed; inset: 0; z-index: 0; }
 .map-stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(12,23,29,.48), transparent 35%), linear-gradient(0deg, rgba(12,23,29,.42), transparent 24%); }
 .map-canvas { width: 100%; height: 100%; }
+.map-setup-error { position: absolute; z-index: 3; top: 100px; left: 50%; transform: translateX(-50%); width: min(410px, calc(100% - 32px)); padding: 16px 18px; border: 1px solid #e99775; border-radius: 7px; background: #1b2d33; color: #e8e2d6; font-size: 13px; line-height: 1.6; box-shadow: 0 15px 40px rgba(4,12,17,.6); }
+.map-setup-error code { color: #e99775; overflow-wrap: anywhere; }
 .map-people-picker { position:absolute; z-index:3; width:270px; max-height:240px; overflow:hidden; border:1px solid #687773; border-radius:7px; background:#1b2d33; box-shadow:0 15px 40px rgba(4,12,17,.6); animation:rise .18s ease both; }
 .map-people-picker-head { padding:11px 12px 9px; display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #3d5355; }
 .map-people-picker-head .eyebrow { font-size:9px; }
@@ -95,13 +97,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .map-people-picker-person strong, .map-people-picker-person small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .map-people-picker-person strong { font-size:12px; font-weight:600; }
 .map-people-picker-person small { font-size:10px; color:#9eb5af; margin-top:2px; }
-.maplibregl-control-container .maplibregl-ctrl-bottom-right { bottom: 64px; right: 15px; }
-.maplibregl-ctrl-attrib { background: rgba(17,28,35,.75) !important; color: #a9b8b5 !important; font: 10px var(--app-font-mono) !important; }
-.maplibregl-ctrl-attrib a { color: #d1aaa0 !important; }
-.maplibregl-ctrl-group { border-radius: 5px !important; overflow: hidden; box-shadow: none !important; border: 1px solid #43515a; background: #1b2a32 !important; }
-.maplibregl-ctrl-group button { background: #1b2a32 !important; }
-.maplibregl-ctrl-group button + button { border-top: 1px solid #43515a !important; }
-.maplibregl-ctrl-icon { filter: invert(.85); }
+.mapboxgl-control-container .mapboxgl-ctrl-bottom-right { bottom: 64px; right: 15px; }
+.mapboxgl-ctrl-attrib { background: rgba(17,28,35,.75) !important; color: #a9b8b5 !important; font: 10px var(--app-font-mono) !important; }
+.mapboxgl-ctrl-attrib a { color: #d1aaa0 !important; }
+.mapboxgl-ctrl-group { border-radius: 5px !important; overflow: hidden; box-shadow: none !important; border: 1px solid #43515a; background: #1b2a32 !important; }
+.mapboxgl-ctrl-group button { background: #1b2a32 !important; }
+.mapboxgl-ctrl-group button + button { border-top: 1px solid #43515a !important; }
+.mapboxgl-ctrl-icon { filter: invert(.85); }
 .topbar { position: relative; z-index: 5; height: 76px; display: flex; align-items: center; justify-content: space-between; padding: 0 34px; border-bottom: 1px solid rgba(219,222,209,.13); background: rgba(16,28,35,.92); backdrop-filter: blur(18px); }
 .brand { display: inline-flex; align-items: center; gap: 13px; color: #eee6d9; text-decoration: none; }
 .brand-mark { width: 35px; height: 35px; border: 1px solid #e99775; border-radius: 50%; display: grid; place-items: center; color: #e99775; position: relative; }
@@ -238,7 +240,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   .panel-footer { padding:10px 15px; }
   .detail-panel { position:fixed; top:auto; bottom:0; left:0; right:0; width:auto; max-height:82dvh; border-radius:12px 12px 0 0; }
   .map-caption { display:none; }
-  .maplibregl-control-container .maplibregl-ctrl-bottom-right { bottom:54dvh; }
+  .mapboxgl-control-container .mapboxgl-ctrl-bottom-right { bottom:54dvh; }
   .auth-page { display:block; }
   .auth-art { min-height:260px; padding:23px; border-right:0; border-bottom:1px solid #3e5258; }
   .auth-hero h1 { font-size:49px; margin-bottom:0; }

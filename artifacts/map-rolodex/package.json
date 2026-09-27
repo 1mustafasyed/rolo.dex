@@ -76,6 +76,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
-    "maplibre-gl": "^6.11.2"
+    "mapbox-gl": "^3.31.0"
   }
 }
