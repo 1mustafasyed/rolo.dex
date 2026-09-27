@@ -43,7 +43,7 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
     };
     const zoomAt = (change: number, x: number, y: number) => {
       const zoom = Math.max(instance.getMinZoom(), Math.min(instance.getMaxZoom(), instance.getZoom() + change));
-      instance.easeTo({ zoom, around: instance.unproject(pointFromClient(x, y)), duration: 0 });
+      instance.jumpTo({ zoom, around: instance.unproject(pointFromClient(x, y)) });
     };
     let safariGestureActive = false;
     let previousGestureScale = 1;
@@ -52,36 +52,45 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
       if (safariGestureActive) return;
       const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
         : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? canvasContainer.clientHeight : 1;
-      if (event.ctrlKey) {
-        // Browsers report trackpad pinches as Ctrl+wheel, unlike two-finger scrolling.
-        zoomAt(-event.deltaY * unit / 100, event.clientX, event.clientY);
+      if (event.ctrlKey || event.deltaZ !== 0) {
+        // Chromium and Firefox report trackpad pinches as Ctrl+wheel; some devices use deltaZ.
+        zoomAt(-(event.deltaZ || event.deltaY) * unit / 100, event.clientX, event.clientY);
       } else {
         instance.panBy([event.deltaX * unit, event.deltaY * unit], { duration: 0 });
       }
     };
     const handleGestureStart = (event: Event) => {
+      const gesture = event as Event & { scale?: number; clientX?: number; clientY?: number };
+      const rect = canvasContainer.getBoundingClientRect();
+      const onCanvas = event.target instanceof Node && canvasContainer.contains(event.target);
+      const inBounds = typeof gesture.clientX === 'number' && typeof gesture.clientY === 'number'
+        && gesture.clientX >= rect.left && gesture.clientX <= rect.right
+        && gesture.clientY >= rect.top && gesture.clientY <= rect.bottom;
+      if (!onCanvas && !inBounds) return;
       event.preventDefault();
       safariGestureActive = true;
-      previousGestureScale = (event as Event & { scale: number }).scale || 1;
+      previousGestureScale = gesture.scale || 1;
     };
     const handleGestureChange = (event: Event) => {
+      if (!safariGestureActive) return;
       event.preventDefault();
-      const gesture = event as Event & { scale: number; clientX: number; clientY: number };
-      if (!gesture.scale || !safariGestureActive) return;
+      const gesture = event as Event & { scale?: number; clientX?: number; clientY?: number };
+      if (!gesture.scale) return;
       const rect = canvasContainer.getBoundingClientRect();
       zoomAt(Math.log2(gesture.scale / previousGestureScale),
-        gesture.clientX || rect.left + rect.width / 2,
-        gesture.clientY || rect.top + rect.height / 2);
+        typeof gesture.clientX === 'number' ? gesture.clientX : rect.left + rect.width / 2,
+        typeof gesture.clientY === 'number' ? gesture.clientY : rect.top + rect.height / 2);
       previousGestureScale = gesture.scale;
     };
     const handleGestureEnd = (event: Event) => {
+      if (!safariGestureActive) return;
       event.preventDefault();
       safariGestureActive = false;
     };
     canvasContainer.addEventListener('wheel', handleWheel, { passive: false });
-    canvasContainer.addEventListener('gesturestart', handleGestureStart, { passive: false });
-    canvasContainer.addEventListener('gesturechange', handleGestureChange, { passive: false });
-    canvasContainer.addEventListener('gestureend', handleGestureEnd, { passive: false });
+    document.addEventListener('gesturestart', handleGestureStart, { capture: true, passive: false });
+    document.addEventListener('gesturechange', handleGestureChange, { capture: true, passive: false });
+    document.addEventListener('gestureend', handleGestureEnd, { capture: true, passive: false });
     instance.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
     instance.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
     instance.on('load', () => {
@@ -164,9 +173,9 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
     });
     return () => {
       canvasContainer.removeEventListener('wheel', handleWheel);
-      canvasContainer.removeEventListener('gesturestart', handleGestureStart);
-      canvasContainer.removeEventListener('gesturechange', handleGestureChange);
-      canvasContainer.removeEventListener('gestureend', handleGestureEnd);
+      document.removeEventListener('gesturestart', handleGestureStart, true);
+      document.removeEventListener('gesturechange', handleGestureChange, true);
+      document.removeEventListener('gestureend', handleGestureEnd, true);
       instance.remove();
       map.current = null;
     };
