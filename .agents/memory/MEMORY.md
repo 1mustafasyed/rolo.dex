@@ -1,1 +1,2 @@
 - [Bulk connector publishing](bulk-connector-publishing.md) — transfer filenames as small metadata, not entire file payloads, when publishing repository snapshots through a connector.
+- [Implicit toolchain installation](implicit-toolchain-installation.md) — invoking a language command may auto-add its module to the workspace; remove it after temporary analysis.

@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import type { GeoJSONSource, Map as MapboxMap } from 'mapbox-gl';
 import type { MapContact } from '@/lib/types';
 import { fullName } from '@/lib/types';
+import { displayPosition, sampleDisplayPosition } from '@/lib/sample-display-position';
 
 type Props = { contacts: MapContact[]; selectedId: string | null; onSelect: (id: string) => void };
 type PeoplePicker = { people: MapContact[]; x: number; y: number };
@@ -15,6 +16,8 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
   const contactsRef = useRef(contacts);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const [picker, setPicker] = useState<PeoplePicker | null>(null);
+  const positions = useMemo(() => new Map(contacts.map(person => [person.id, displayPosition(person)])), [contacts]);
+  const hasIllustrativePins = contacts.some(person => sampleDisplayPosition(person) !== null);
   onSelectRef.current = onSelect;
   contactsRef.current = contacts;
 
@@ -91,8 +94,7 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
     document.addEventListener('gesturestart', handleGestureStart, { capture: true, passive: false });
     document.addEventListener('gesturechange', handleGestureChange, { capture: true, passive: false });
     document.addEventListener('gestureend', handleGestureEnd, { capture: true, passive: false });
-    instance.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
-    instance.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+    instance.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
     instance.on('load', () => {
       instance.addSource('people', {
         type: 'geojson',
@@ -104,28 +106,28 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
       instance.addLayer({
         id: 'cluster-halo', type: 'circle', source: 'people',
         filter: ['has', 'point_count'],
-        paint: { 'circle-color': '#e99775', 'circle-radius': ['step', ['get', 'point_count'], 25, 10, 31, 35, 38], 'circle-opacity': .14 },
+        paint: { 'circle-color': '#c77a5f', 'circle-radius': ['step', ['get', 'point_count'], 25, 10, 31, 35, 38], 'circle-opacity': .18 },
       });
       instance.addLayer({
         id: 'clusters', type: 'circle', source: 'people',
         filter: ['has', 'point_count'],
-        paint: { 'circle-color': '#e99775', 'circle-radius': ['step', ['get', 'point_count'], 17, 10, 21, 35, 26], 'circle-stroke-width': 2, 'circle-stroke-color': '#192831' },
+        paint: { 'circle-color': '#c77a5f', 'circle-radius': ['step', ['get', 'point_count'], 17, 10, 21, 35, 26], 'circle-stroke-width': 2, 'circle-stroke-color': '#292929' },
       });
       instance.addLayer({
         id: 'cluster-count', type: 'symbol', source: 'people',
         filter: ['has', 'point_count'],
         layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 11, 'text-font': ['DIN Pro Bold'] },
-        paint: { 'text-color': '#17252b' },
+        paint: { 'text-color': '#1f1f1f' },
       });
       instance.addLayer({
         id: 'person-halo', type: 'circle', source: 'people',
         filter: ['!', ['has', 'point_count']],
-        paint: { 'circle-color': '#e99775', 'circle-opacity': .19, 'circle-radius': 14 },
+        paint: { 'circle-color': '#c77a5f', 'circle-opacity': .22, 'circle-radius': 14 },
       });
       instance.addLayer({
         id: 'person-pin', type: 'circle', source: 'people',
         filter: ['!', ['has', 'point_count']],
-        paint: { 'circle-color': '#e99775', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': '#13262c' },
+        paint: { 'circle-color': '#dfa18a', 'circle-radius': 6, 'circle-stroke-width': 2, 'circle-stroke-color': '#1f1f1f' },
       });
       instance.on('click', 'clusters', (event) => {
         setPicker(null);
@@ -148,17 +150,17 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
         if (typeof id !== 'string') return;
         const clicked = contactsRef.current.find(person => person.id === id);
         if (!clicked) return;
-        // At a city's exact coordinates, the map draws individual features on top
-        // of each other after the native cluster expands. Offer every person there.
+        // Center-pin fallbacks can still overlap after a cluster expands.
+        const clickedPosition = displayPosition(clicked);
         const people = contactsRef.current.filter(person =>
-          Number(person.longitude) === Number(clicked.longitude) &&
-          Number(person.latitude) === Number(clicked.latitude)
+          displayPosition(person)[0] === clickedPosition[0] &&
+          displayPosition(person)[1] === clickedPosition[1]
         ).sort((a, b) => fullName(a).localeCompare(fullName(b)));
         if (people.length === 1) {
           setPicker(null);
           onSelectRef.current(id);
         } else {
-          const point = instance.project([Number(clicked.longitude), Number(clicked.latitude)]);
+          const point = instance.project(clickedPosition);
           setPicker({ people, x: point.x, y: point.y });
         }
       });
@@ -190,7 +192,7 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
         type: 'FeatureCollection',
         features: contacts.map(contact => ({
           type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [Number(contact.longitude), Number(contact.latitude)] },
+          geometry: { type: 'Point' as const, coordinates: positions.get(contact.id)! },
           properties: { id: contact.id },
         })),
       });
@@ -198,15 +200,15 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
     if (instance.getSource('people')) update();
     else instance.on('load', update);
     return () => { instance.off('load', update); };
-  }, [contacts]);
+  }, [contacts, positions]);
 
   useEffect(() => {
     const instance = map.current;
-    const contact = contacts.find(person => person.id === selectedId);
-    if (instance && contact) {
-      instance.easeTo({ center: [Number(contact.longitude), Number(contact.latitude)], zoom: Math.max(instance.getZoom(), 5), duration: 650, offset: window.innerWidth > 680 ? [-130, 0] : [0, -110] });
+    const position = selectedId ? positions.get(selectedId) : undefined;
+    if (instance && position) {
+      instance.easeTo({ center: position, zoom: Math.max(instance.getZoom(), 5), duration: 650, offset: window.innerWidth > 680 ? [0, 0] : [0, -110] });
     }
-  }, [selectedId, contacts]);
+  }, [selectedId, positions]);
 
   const choose = (id: string) => {
     setPicker(null);
@@ -219,6 +221,10 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
   };
   return <div className="map-stage">
     <div ref={container} className="map-canvas" data-testid="map-atlas" aria-label="World map of your contacts. Use the contact list to access every person by keyboard." />
+    {hasIllustrativePins && <div className="sample-map-note">
+      Sample pins show illustrative positions within mapped city limits, not real locations.
+      {' '}Boundary data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.
+    </div>}
     {!mapboxToken && <div className="map-setup-error" role="alert">
       Mapbox is not connected yet. Add your public token as the <code>VITE_MAPBOX_ACCESS_TOKEN</code> Replit Secret to load the map.
     </div>}
