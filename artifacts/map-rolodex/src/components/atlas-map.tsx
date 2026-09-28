@@ -5,20 +5,22 @@ import type { MapContact } from '@/lib/types';
 import { fullName } from '@/lib/types';
 import { displayPosition, sampleDisplayPosition } from '@/lib/sample-display-position';
 
-type Props = { contacts: MapContact[]; selectedId: string | null; onSelect: (id: string) => void };
+type Props = { contacts: MapContact[]; selectedId: string | null; onSelect: (id: string) => void; onReady?: () => void };
 type PeoplePicker = { people: MapContact[]; x: number; y: number };
 const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
 
-export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
+export function AtlasMap({ contacts, selectedId, onSelect, onReady }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MapboxMap | null>(null);
   const onSelectRef = useRef(onSelect);
+  const onReadyRef = useRef(onReady);
   const contactsRef = useRef(contacts);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const [picker, setPicker] = useState<PeoplePicker | null>(null);
   const positions = useMemo(() => new Map(contacts.map(person => [person.id, displayPosition(person)])), [contacts]);
   const hasIllustrativePins = contacts.some(person => sampleDisplayPosition(person) !== null);
   onSelectRef.current = onSelect;
+  onReadyRef.current = onReady;
   contactsRef.current = contacts;
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
       return [x - rect.left, y - rect.top];
     };
     const zoomAt = (change: number, x: number, y: number) => {
+      if (!Number.isFinite(change) || change === 0) return;
       const zoom = Math.max(instance.getMinZoom(), Math.min(instance.getMaxZoom(), instance.getZoom() + change));
       instance.jumpTo({ zoom, around: instance.unproject(pointFromClient(x, y)) });
     };
@@ -56,7 +59,7 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
       const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
         : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? canvasContainer.clientHeight : 1;
       if (event.ctrlKey || event.deltaZ !== 0) {
-        // Chromium and Firefox report trackpad pinches as Ctrl+wheel; some devices use deltaZ.
+        // Follow every pinch wheel event, including any momentum events the device sends.
         zoomAt(-(event.deltaZ || event.deltaY) * unit / 100, event.clientX, event.clientY);
       } else {
         instance.panBy([event.deltaX * unit, event.deltaY * unit], { duration: 0 });
@@ -78,7 +81,7 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
       if (!safariGestureActive) return;
       event.preventDefault();
       const gesture = event as Event & { scale?: number; clientX?: number; clientY?: number };
-      if (!gesture.scale) return;
+      if (!gesture.scale || gesture.scale <= 0 || previousGestureScale <= 0) return;
       const rect = canvasContainer.getBoundingClientRect();
       zoomAt(Math.log2(gesture.scale / previousGestureScale),
         typeof gesture.clientX === 'number' ? gesture.clientX : rect.left + rect.width / 2,
@@ -90,10 +93,14 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
       event.preventDefault();
       safariGestureActive = false;
     };
+    const handleGestureCancel = () => {
+      safariGestureActive = false;
+    };
     canvasContainer.addEventListener('wheel', handleWheel, { passive: false });
     document.addEventListener('gesturestart', handleGestureStart, { capture: true, passive: false });
     document.addEventListener('gesturechange', handleGestureChange, { capture: true, passive: false });
     document.addEventListener('gestureend', handleGestureEnd, { capture: true, passive: false });
+    document.addEventListener('gesturecancel', handleGestureCancel, true);
     instance.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
     instance.on('load', () => {
       instance.addSource('people', {
@@ -172,12 +179,14 @@ export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
         instance.on('mouseenter', layer, () => { instance.getCanvas().style.cursor = 'pointer'; });
         instance.on('mouseleave', layer, () => { instance.getCanvas().style.cursor = ''; });
       }
+      onReadyRef.current?.();
     });
     return () => {
       canvasContainer.removeEventListener('wheel', handleWheel);
       document.removeEventListener('gesturestart', handleGestureStart, true);
       document.removeEventListener('gesturechange', handleGestureChange, true);
       document.removeEventListener('gestureend', handleGestureEnd, true);
+      document.removeEventListener('gesturecancel', handleGestureCancel, true);
       instance.remove();
       map.current = null;
     };

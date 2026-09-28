@@ -29,9 +29,11 @@ import {
 export default function AtlasPage({
   session,
   onSignOut,
+  onMapReady,
 }: {
   session: Session;
   onSignOut: () => Promise<void>;
+  onMapReady?: () => void;
 }) {
   const { view, contacts, places, create, update, remove, seed, refresh } =
     useAtlas(session.user.id);
@@ -177,6 +179,7 @@ export default function AtlasPage({
         contacts={mapped}
         selectedId={selectedMap ? selectedId : null}
         onSelect={setSelectedId}
+        onReady={onMapReady}
       />
       <div className="atlas-brand brand">
         <span className="brand-mark">
@@ -256,7 +259,7 @@ export default function AtlasPage({
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Find someone in your atlas..."
+              placeholder="Find someone in your rolodex..."
               aria-label="Search contacts"
               data-testid="input-search-contacts"
             />
