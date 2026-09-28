@@ -371,7 +371,7 @@ body { background: var(--land); color: var(--paper); }
 .form-note { color: #c0bab3; }
 .auth-page { background: var(--land); }
 .auth-art {
-  border-color: #484542;
+  border-right: 0;
   background: radial-gradient(ellipse at 48% 42%, #383634 0%, #2c2a29 44%, #1f1f1f 100%);
 }
 .auth-art::before {
@@ -385,7 +385,14 @@ body { background: var(--land); color: var(--paper); }
 .auth-hero h1 { font-size: clamp(58px,6.3vw,102px); }
 .auth-hero h1 em { color: var(--rust-light); }
 .auth-hero p { color: #d0cbc4; }
-.auth-form-side { background: #292827; }
+.auth-form-side {
+  --auth-fade-width: clamp(80px, 8vw, 120px);
+  position: relative;
+  z-index: 1;
+  margin-left: calc(-1 * var(--auth-fade-width));
+  padding-left: calc(50px + var(--auth-fade-width));
+  background: linear-gradient(90deg, transparent 0, rgba(41,40,39,.55) 62px, #292827 145px);
+}
 .auth-card h2 { font-size: 54px; }
 .auth-card > p { color: #c7c1ba; }
 .auth-card .field { margin-bottom: 23px; }
@@ -423,7 +430,7 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
   .detail-panel { background: #292827; }
   .auth-art { min-height: 245px; background: radial-gradient(ellipse at 50% 35%,#393735,#1f1f1f 82%); }
   .auth-hero h1 { font-size: 51px; }
-  .auth-form-side { padding: 34px 24px 42px; }
+  .auth-form-side { margin-left: 0; padding: 34px 24px 42px; background: #292827; }
   .auth-card h2 { font-size: 47px; }
   .auth-card > p { margin-bottom: 27px; }
   .auth-foot { margin-top: 36px; }
