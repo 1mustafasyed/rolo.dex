@@ -1,11 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Contact, ContactInput, MapContact, Place } from '@/lib/types';
+import type { Contact, MapContact, Place } from '@/lib/types';
+import { atlasWrites } from '@/lib/atlas-writes';
+import type { User } from '@supabase/supabase-js';
 
 const viewFields = 'id,owner_id,first_name,last_name,job_title,company,email,connection_type,how_we_met,source,location_confirmed_at,updated_at,place_id,city,region,country_code,latitude,longitude';
 const contactFields = 'id,owner_id,first_name,last_name,job_title,company,email,connection_type,how_we_met,place_id';
 
-export function useAtlas(userId: string) {
+export function useAtlas(user: User) {
+  const userId = user.id;
+  const writes = atlasWrites(supabase, user);
   const queryClient = useQueryClient();
   const view = useQuery({
     queryKey: ['atlas', userId, 'view'],
@@ -43,33 +47,19 @@ export function useAtlas(userId: string) {
     ]);
   };
   const create = useMutation({
-    mutationFn: async (input: ContactInput) => {
-      const { error } = await supabase.from('contacts').insert(input);
-      if (error) throw error;
-    },
+    mutationFn: writes.create,
     onSuccess: refresh,
   });
   const update = useMutation({
-    mutationFn: async ({ id, input }: { id: string; input: ContactInput }) => {
-      const { data, error } = await supabase.from('contacts').update(input).eq('id', id).eq('owner_id', userId).select('id');
-      if (error) throw error;
-      if (!data?.length) throw new Error('Contact not found or you do not have permission to edit it.');
-    },
+    mutationFn: writes.update,
     onSuccess: refresh,
   });
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { data, error } = await supabase.from('contacts').delete().eq('id', id).eq('owner_id', userId).select('id');
-      if (error) throw error;
-      if (!data?.length) throw new Error('Contact not found or you do not have permission to delete it.');
-    },
+    mutationFn: writes.remove,
     onSuccess: refresh,
   });
   const seed = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc('seed_sample_contacts');
-      if (error) throw error;
-    },
+    mutationFn: writes.seed,
     onSuccess: refresh,
   });
   return { view, contacts, places, create, update, remove, seed, refresh };

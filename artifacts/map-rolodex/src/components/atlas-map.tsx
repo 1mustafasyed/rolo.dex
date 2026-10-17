@@ -5,22 +5,20 @@ import type { MapContact } from '@/lib/types';
 import { fullName } from '@/lib/types';
 import { displayPosition, sampleDisplayPosition } from '@/lib/sample-display-position';
 
-type Props = { contacts: MapContact[]; selectedId: string | null; onSelect: (id: string) => void; onReady?: () => void };
+type Props = { contacts: MapContact[]; selectedId: string | null; onSelect: (id: string) => void };
 type PeoplePicker = { people: MapContact[]; x: number; y: number };
 const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN?.trim();
 
-export function AtlasMap({ contacts, selectedId, onSelect, onReady }: Props) {
+export function AtlasMap({ contacts, selectedId, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<MapboxMap | null>(null);
   const onSelectRef = useRef(onSelect);
-  const onReadyRef = useRef(onReady);
   const contactsRef = useRef(contacts);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const [picker, setPicker] = useState<PeoplePicker | null>(null);
   const positions = useMemo(() => new Map(contacts.map(person => [person.id, displayPosition(person)])), [contacts]);
   const hasIllustrativePins = contacts.some(person => sampleDisplayPosition(person) !== null);
   onSelectRef.current = onSelect;
-  onReadyRef.current = onReady;
   contactsRef.current = contacts;
 
   useEffect(() => {
@@ -28,7 +26,8 @@ export function AtlasMap({ contacts, selectedId, onSelect, onReady }: Props) {
   }, [picker]);
 
   useEffect(() => {
-    if (!container.current || !mapboxToken) return;
+    if (!mapboxToken) return;
+    if (!container.current) return;
     const instance = new mapboxgl.Map({
       container: container.current,
       accessToken: mapboxToken,
@@ -179,7 +178,6 @@ export function AtlasMap({ contacts, selectedId, onSelect, onReady }: Props) {
         instance.on('mouseenter', layer, () => { instance.getCanvas().style.cursor = 'pointer'; });
         instance.on('mouseleave', layer, () => { instance.getCanvas().style.cursor = ''; });
       }
-      onReadyRef.current?.();
     });
     return () => {
       canvasContainer.removeEventListener('wheel', handleWheel);

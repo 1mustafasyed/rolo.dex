@@ -1,0 +1,19 @@
+kind = "design-system"
+previewPath = "/map-rolodex-design-system/"
+title = "Map Rolodex Design System"
+description = "Extracted design tokens, source-backed React components, and a living style guide for Map Rolodex. Preserves charcoal, rust, and editorial typography; existing app screens remain unchanged."
+version = "1.0.0"
+id = "artifacts/map-rolodex-design-system"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/map-rolodex-design-system/" ]
+localPort = 19221
+
+[services.development]
+run = "pnpm --filter @workspace/map-rolodex-design-system run dev"
+
+[services.env]
+PORT = "19221"
+BASE_PATH = "/map-rolodex-design-system/"
