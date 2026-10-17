@@ -17,6 +17,7 @@ import {
 import { AtlasMap } from "@/components/atlas-map";
 import { ContactForm } from "@/components/contact-form";
 import { useAtlas } from "@/hooks/use-atlas";
+import { isDemoUser } from "@/lib/demo";
 import { sampleDisplayPosition } from "@/lib/sample-display-position";
 import {
   fullName,
@@ -29,14 +30,13 @@ import {
 export default function AtlasPage({
   session,
   onSignOut,
-  onMapReady,
 }: {
   session: Session;
   onSignOut: () => Promise<void>;
-  onMapReady?: () => void;
 }) {
   const { view, contacts, places, create, update, remove, seed, refresh } =
-    useAtlas(session.user.id);
+     useAtlas(session.user);
+  const demo = isDemoUser(session.user);
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<"new" | "edit" | null>(null);
@@ -44,6 +44,7 @@ export default function AtlasPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const signOutInFlight = useRef(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
@@ -117,6 +118,7 @@ export default function AtlasPage({
     return place ? placeLabel(place) : "No city set";
   };
   const save = async (input: ContactInput) => {
+    if (demo) return;
     setFormError(null);
     try {
       if (form === "edit" && selected)
@@ -133,7 +135,7 @@ export default function AtlasPage({
     }
   };
   const deleteSelected = async () => {
-    if (!selected) return;
+    if (demo || !selected) return;
     setActionError(null);
     try {
       await remove.mutateAsync(selected.id);
@@ -148,6 +150,7 @@ export default function AtlasPage({
     }
   };
   const seedContacts = async () => {
+    if (demo) return;
     setActionError(null);
     try {
       await seed.mutateAsync();
@@ -160,6 +163,8 @@ export default function AtlasPage({
     }
   };
   const logout = async () => {
+    if (signOutInFlight.current) return;
+    signOutInFlight.current = true;
     setSigningOut(true);
     setActionError(null);
     try {
@@ -169,17 +174,23 @@ export default function AtlasPage({
         caught instanceof Error ? caught.message : "Could not sign out.",
       );
       setSigningOut(false);
+      signOutInFlight.current = false;
     }
   };
   const loading = contacts.isPending || view.isPending;
   const dataError = contacts.error || view.error;
   return (
-    <main className="shell">
+    <main className={`shell${demo ? " demo-shell" : ""}`}>
+      {demo && <div className="demo-banner" data-testid="banner-demo-mode">
+        <span><strong>Demo mode</strong><span className="demo-banner-note"> — Read-only exploration</span></span>
+        <button className="ghost-btn" type="button" onClick={logout} disabled={signingOut} data-testid="button-exit-demo">
+          {signingOut ? "Exiting..." : "Exit demo"}
+        </button>
+      </div>}
       <AtlasMap
         contacts={mapped}
         selectedId={selectedMap ? selectedId : null}
         onSelect={setSelectedId}
-        onReady={onMapReady}
       />
       <div className="atlas-brand brand">
         <span className="brand-mark">
@@ -234,7 +245,7 @@ export default function AtlasPage({
               }}
               disabled={signingOut}
             >
-              <LogOut size={15} /> Sign out
+               <LogOut size={15} /> {demo ? "Exit demo" : "Sign out"}
             </button>
           </div>
         )}
@@ -324,9 +335,9 @@ export default function AtlasPage({
               </div>
               <h3>Every atlas starts somewhere.</h3>
               <p>
-                Add the first person you want to remember, or explore with
-                sample contacts.
+                 {demo ? "No demo contacts are available. Try refreshing your atlas." : "Add the first person you want to remember, or explore with sample contacts."}
               </p>
+               {!demo && <>
               <button
                 className="primary-btn"
                 onClick={() => {
@@ -347,6 +358,7 @@ export default function AtlasPage({
                   {seed.isPending ? "Adding samples..." : "Add sample contacts"}
                 </button>
               </div>
+               </>}
             </div>
           )}
           {!loading && !dataError && people.length > 0 && (
@@ -416,7 +428,7 @@ export default function AtlasPage({
             </>
           )}
         </div>
-        <div className="panel-footer">
+        {!demo && <div className="panel-footer">
           <button
             className="primary-btn"
             data-testid="button-add-contact"
@@ -427,7 +439,7 @@ export default function AtlasPage({
           >
             <Plus size={15} /> Add a person
           </button>
-        </div>
+        </div>}
       </aside>
       {selected && (
         <aside
@@ -528,7 +540,7 @@ export default function AtlasPage({
               </div>
             )}
           </div>
-          <div className="detail-actions">
+          {!demo && <div className="detail-actions">
             <button
               className="ghost-btn"
               onClick={() => {
@@ -546,10 +558,10 @@ export default function AtlasPage({
             >
               <Trash2 size={14} /> Delete
             </button>
-          </div>
+          </div>}
         </aside>
       )}
-      {form && (
+      {!demo && form && (
         <ContactForm
           key={form === "edit" ? selected?.id : "new"}
           contact={form === "edit" ? selected : null}
@@ -561,7 +573,7 @@ export default function AtlasPage({
           onSave={save}
         />
       )}
-      {confirmDelete && selected && (
+      {!demo && confirmDelete && selected && (
         <div
           className="overlay"
           onMouseDown={(event) => {

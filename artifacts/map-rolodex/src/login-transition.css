@@ -3,60 +3,69 @@
   inset: 0;
   z-index: 51;
   overflow-y: auto;
-  background: #292827;
+  background: var(--entrance-background, #292929);
 }
 
-.login-auth-layer.is-exiting,
+/* Keep login visible underneath the incoming panes; splash follows rust. */
+.entrance-rust {
+  position: fixed;
+  inset: 0;
+  z-index: 52;
+  pointer-events: none;
+  background: var(--entrance-primary);
+}
+.entrance-rust.is-entering {
+  animation: rust-rise-to-cascade var(--rust-cascade-duration) linear both;
+}
+.entrance-rust.is-following {
+  animation: rust-rise-finish var(--rust-finish-duration) linear both;
+}
+.welcome-splash.is-waiting { transform: translate3d(0, 100%, 0); }
+.welcome-splash.is-entering {
+  animation: login-rise-up var(--entrance-entry-duration) cubic-bezier(.22, .61, .36, 1) both;
+}
 .welcome-splash.is-exiting {
   pointer-events: none;
-  animation: login-swipe-up 1s cubic-bezier(.76, 0, .24, 1) both;
-}
-.login-auth-layer.is-exiting {
-  animation-duration: .7s;
+  animation: login-swipe-up var(--entrance-exit-duration, 1s) cubic-bezier(.76, 0, .24, 1) both;
 }
 
+@keyframes rust-rise-to-cascade {
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: translate3d(0, 33.333333%, 0); }
+}
+@keyframes rust-rise-finish {
+  from { transform: translate3d(0, 33.333333%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes login-rise-up {
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
 @keyframes login-swipe-up {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(0, -100%, 0); }
 }
+@keyframes login-fade-out { from { opacity: 1; } to { opacity: 0; } }
 
 .welcome-splash {
+  --d: var(--entrance-reveal-duration, 1500ms);
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 53;
   overflow: hidden;
   isolation: isolate;
-  background: radial-gradient(ellipse at 70% 48%, #383431 0%, #292827 42%, #1c1c1c 100%);
-  color: #eeeae4;
-  font-family: var(--app-font-sans);
-}
-
-.welcome-splash::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(90deg, rgba(20,20,20,.32), transparent 42%, rgba(20,20,20,.14));
+  background: radial-gradient(ellipse at 70% 48%, var(--entrance-sidebar) 0%, var(--entrance-background) 55%, var(--entrance-surface) 100%);
+  color: var(--entrance-foreground);
+  font-family: var(--entrance-font-sans);
 }
 
 .welcome-scene { position: absolute; inset: 0; }
-
-.welcome-veil {
-  position: absolute;
-  z-index: 10;
-  inset: 0;
-  background: #d79a80;
-  transform-origin: top;
-  animation: welcome-curtain 1s cubic-bezier(.76,0,.24,1) both;
-  pointer-events: none;
-}
 
 .welcome-grid {
   position: absolute;
   inset: 0;
   opacity: .37;
-  background-image: linear-gradient(rgba(225,211,199,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(225,211,199,.075) 1px, transparent 1px);
+  background-image: linear-gradient(color-mix(in srgb, var(--entrance-border) 60%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--entrance-border) 60%, transparent) 1px, transparent 1px);
   background-size: 80px 80px;
   mask-image: linear-gradient(90deg, transparent 12%, black 48%, black 100%);
 }
@@ -69,13 +78,11 @@
   justify-content: space-between;
   padding: 8vh 0;
   overflow: hidden;
-  color: #d3a28e;
+  color: var(--entrance-accent);
   opacity: .11;
-  font: 400 clamp(9px,1vw,14px)/1 var(--app-font-mono);
-  animation: welcome-field-in .9s ease-out both;
+  font: 400 clamp(9px,1vw,14px)/1 var(--entrance-font-mono);
   pointer-events: none;
 }
-
 .welcome-field-row {
   display: flex;
   justify-content: space-around;
@@ -94,18 +101,16 @@
   right: -4%;
   top: 50%;
   transform: translateY(-50%);
-  animation: welcome-orbit-in .85s cubic-bezier(.16,1,.3,1) both;
 }
 .welcome-orbit svg { width: 100%; height: 100%; overflow: visible; }
-.orbit-ring { stroke: rgba(228,218,209,.24); stroke-width: .8; }
+.orbit-ring { stroke: color-mix(in srgb, var(--entrance-foreground) 24%, transparent); stroke-width: .8; }
 .orbit-ring-outer { stroke-dasharray: 5 9; }
-.orbit-ring-middle { stroke: rgba(228,218,209,.28); }
-.orbit-ring-inner { stroke: rgba(228,218,209,.16); stroke-dasharray: 2 7; }
-.orbit-ring-core { stroke: rgba(223,161,138,.55); }
-.orbit-axis { stroke: rgba(228,218,209,.18); stroke-width: .8; }
-.orbit-route { stroke: #bd8169; stroke-width: 1.3; stroke-dasharray: 1900; animation: welcome-route .9s .08s ease-in-out both; }
-.orbit-node { fill: #292827; stroke: #dfa18a; stroke-width: 2; }
-.orbit-center { fill: #dfa18a; stroke: #292827; stroke-width: 5; }
+.orbit-ring-inner { stroke: color-mix(in srgb, var(--entrance-foreground) 16%, transparent); stroke-dasharray: 2 7; }
+.orbit-ring-core { stroke: color-mix(in srgb, var(--entrance-accent) 55%, transparent); }
+.orbit-axis { stroke: color-mix(in srgb, var(--entrance-foreground) 18%, transparent); stroke-width: .8; }
+.orbit-route { stroke: var(--entrance-primary); stroke-width: 1.3; stroke-dasharray: 1900; }
+.orbit-node { fill: var(--entrance-background); stroke: var(--entrance-accent); stroke-width: 2; }
+.orbit-center { fill: var(--entrance-accent); stroke: var(--entrance-background); stroke-width: 5; }
 
 .welcome-content {
   position: absolute;
@@ -120,76 +125,118 @@
   align-items: center;
   gap: 13px;
   margin-bottom: clamp(25px,4vh,45px);
-  color: #d2b6a8;
-  font: 500 10px/1.4 var(--app-font-mono);
+  color: var(--entrance-muted);
+  font: 500 10px/1.4 var(--entrance-font-mono);
   letter-spacing: .14em;
-  animation: welcome-chrome-in .45s .28s both;
 }
-.welcome-kicker-line { display: block; width: 29px; height: 1px; background: #cf8e73; }
+.welcome-kicker-line { display: block; width: 29px; height: 1px; background: var(--entrance-primary); }
 .welcome-content h1 {
   margin: 0;
-  font: 500 clamp(74px, 11vw, 180px)/.84 var(--app-font-sans);
+  font: 500 clamp(74px, 11vw, 180px)/.84 var(--entrance-font-sans);
   letter-spacing: -.09em;
 }
 .welcome-type-window { display: block; overflow: hidden; padding: .075em .08em .1em 0; margin-bottom: -.09em; }
-.welcome-type-line { display: block; width: max-content; max-width: 100%; animation: welcome-type-up .62s cubic-bezier(.18,1,.28,1) both; }
-.welcome-type-line-one { animation-delay: .17s; }
-.welcome-type-line-two { animation-delay: .28s; }
+.welcome-type-line { display: block; width: max-content; max-width: 100%; transform: translateY(115%); }
 .welcome-type-line-three {
-  color: #dfa18a;
-  font: 400 clamp(90px, 13.5vw, 210px)/.79 var(--app-font-serif);
+  color: var(--entrance-accent);
+  font: 400 clamp(90px, 13.5vw, 210px)/.79 var(--entrance-font-serif);
   letter-spacing: -.07em;
-  animation-delay: .38s;
 }
-.welcome-period { color: #eeeae4; }
-.welcome-title-rule { width: 76px; height: 2px; margin-top: 40px; background: #dfa18a; transform-origin: left; animation: welcome-rule .5s .55s both; }
+.welcome-period { color: var(--entrance-foreground); }
+.welcome-title-rule { width: 76px; height: 2px; margin-top: 40px; background: var(--entrance-accent); transform-origin: left; transform: scaleX(0); }
 
-.welcome-splash-wait {
-  position: absolute;
-  z-index: 11;
-  left: clamp(25px,7vw,116px);
-  bottom: 26px;
-  max-width: calc(100vw - 50px);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  color: #eeeae4;
-  font-size: 12px;
-  animation: welcome-chrome-in .3s both;
-}
-.welcome-splash-wait p { margin: 0; }
-.welcome-splash-wait button {
-  padding: 10px 16px;
-  border: 1px solid #c77a5f;
-  border-radius: 2px;
-  background: #292827;
-  color: #eeeae4;
-  cursor: pointer;
-}
-.welcome-splash-wait button:hover { background: #49382f; }
+/* Pre-reveal hidden states */
+.welcome-field { opacity: 0; }
+.welcome-orbit { opacity: 0; }
+.welcome-kicker { opacity: 0; }
 
-@keyframes welcome-curtain { 0% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
-@keyframes welcome-field-in { from { opacity: .35; transform: translateY(38px); } to { opacity: .11; transform: translateY(0); } }
+/* Reveal overlaps pane entry, without restarting once the pane fills the screen.
+   Text and artwork start immediately; the final line still ends at --d. */
+.welcome-splash.is-revealing .welcome-field { animation: welcome-field-in calc(var(--d) * .9) ease-out both; }
+.welcome-splash.is-revealing .welcome-orbit { animation: welcome-orbit-in calc(var(--d) * .85) cubic-bezier(.16,1,.3,1) both; }
+.welcome-splash.is-revealing .orbit-route { animation: welcome-route var(--d) linear both; }
+.welcome-splash.is-revealing .welcome-kicker { animation: welcome-chrome-in calc(var(--d) * .45) both; }
+.welcome-splash.is-revealing .welcome-type-line { animation: welcome-type-up calc(var(--d) * .62) cubic-bezier(.18,1,.28,1) both; }
+.welcome-splash.is-revealing .welcome-type-line-one { animation-delay: 0ms; }
+.welcome-splash.is-revealing .welcome-type-line-two { animation-delay: calc(var(--d) * .28); }
+.welcome-splash.is-revealing .welcome-type-line-three { animation-delay: calc(var(--d) * .38); }
+.welcome-splash.is-revealing .welcome-title-rule { animation: welcome-rule calc(var(--d) * .4) calc(var(--d) * .6) both; }
+
+/* Keep final artwork visible when the reveal animation class is removed. */
+.welcome-splash.is-readable .welcome-type-line { transform: translateY(0); }
+.welcome-splash.is-readable .welcome-kicker,
+.welcome-splash.is-readable .welcome-orbit { opacity: 1; }
+.welcome-splash.is-readable .welcome-field { opacity: .11; }
+.welcome-splash.is-readable .welcome-title-rule { transform: scaleX(1); }
+.welcome-splash.is-readable .orbit-route { stroke-dashoffset: 0; }
+
+@keyframes welcome-field-in { from { opacity: 0; transform: translateY(38px); } to { opacity: .11; transform: translateY(0); } }
 @keyframes welcome-orbit-in { from { opacity: 0; transform: translate(12%, -46%) scale(.88) rotate(-10deg); } to { opacity: 1; transform: translate(0, -50%) scale(1) rotate(0); } }
 @keyframes welcome-route { from { stroke-dashoffset: 1900; } to { stroke-dashoffset: 0; } }
 @keyframes welcome-type-up { from { transform: translateY(115%); } to { transform: translateY(0); } }
+@keyframes welcome-type-fade { from { opacity: 0; transform: none; } to { opacity: 1; transform: none; } }
 @keyframes welcome-chrome-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes welcome-rule { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 @media (max-width: 680px) {
-  .welcome-orbit { width: 115vw; right: -44%; top: 45%; opacity: .7; }
+  .welcome-orbit { width: 115vw; right: -44%; top: 45%; }
   .welcome-content { top: 48%; left: 7%; width: 90vw; transform: translateY(-30%); }
   .welcome-content h1 { font-size: clamp(62px, 14vw, 100px); }
   .welcome-type-line-three { font-size: clamp(84px, 20vw, 140px); }
   .welcome-kicker { font-size: 9px; margin-bottom: 27px; }
   .welcome-grid { background-size: 58px 58px; }
-  .welcome-splash-wait { left: 7%; right: 7%; flex-direction: column; align-items: flex-start; gap: 8px; }
 }
+
+/* Short landscape: scale type by height so nothing clips */
+@media (max-height: 520px) {
+  .welcome-content { top: 44%; transform: translateY(-46%); }
+  .welcome-content h1 { font-size: clamp(40px, 17vh, 90px); }
+  .welcome-type-line-three { font-size: clamp(48px, 20vh, 108px); }
+  .welcome-kicker { margin-bottom: 12px; }
+  .welcome-title-rule { margin-top: 16px; }
+}
+
+/* Reduced motion: opacity only, titles readable at once, no sweep */
+.welcome-splash.is-reduced .welcome-type-line,
+.welcome-splash.is-reduced .welcome-title-rule,
+.welcome-splash.is-reduced .welcome-kicker,
+.welcome-splash.is-reduced .welcome-orbit,
+.welcome-splash.is-reduced .welcome-field { transform: none; }
+.welcome-splash.is-reduced .welcome-type-line,
+.welcome-splash.is-reduced .welcome-kicker,
+.welcome-splash.is-reduced .welcome-orbit { opacity: 1; }
+.welcome-splash.is-reduced .welcome-field { opacity: .11; }
+.welcome-splash.is-reduced .welcome-title-rule { transform: none; }
+.welcome-splash.is-reduced .orbit-route { stroke-dasharray: none; }
+.welcome-splash.is-reduced.is-revealing .welcome-field,
+.welcome-splash.is-reduced.is-revealing .welcome-orbit,
+.welcome-splash.is-reduced.is-revealing .orbit-route,
+.welcome-splash.is-reduced.is-revealing .welcome-kicker,
+.welcome-splash.is-reduced.is-revealing .welcome-title-rule { animation: none; }
+.welcome-splash.is-reduced.is-revealing .welcome-type-line {
+  animation: welcome-type-fade .01ms both;
+  animation-delay: 0ms;
+}
+.welcome-splash.is-reduced.is-exiting,
+.entrance-rust.is-reduced.is-exiting { animation-name: login-fade-out; animation-timing-function: linear; }
+.entrance-rust.is-reduced.is-entering,
+.entrance-rust.is-reduced.is-following,
+.welcome-splash.is-reduced.is-entering { animation: none; transform: none; }
 @media (prefers-reduced-motion: reduce) {
-  .login-auth-layer.is-exiting, .welcome-splash.is-exiting,
-  .welcome-splash *, .welcome-splash *::before, .welcome-splash *::after {
-    animation-duration: .01ms !important;
-    animation-delay: 0ms !important;
-  }
-  .welcome-veil { display: none; }
+  .entrance-rust.is-entering,
+  .entrance-rust.is-following,
+  .welcome-splash.is-entering { animation: none; transform: none; }
+  .welcome-splash .welcome-type-line,
+  .welcome-splash .welcome-kicker,
+  .welcome-splash .welcome-orbit { opacity: 1; transform: none; }
+  .welcome-splash .welcome-field { opacity: .11; }
+  .welcome-splash .welcome-title-rule { transform: none; }
+  .welcome-splash .orbit-route { stroke-dasharray: none; }
+  .welcome-splash.is-revealing .welcome-field,
+  .welcome-splash.is-revealing .welcome-orbit,
+  .welcome-splash.is-revealing .orbit-route,
+  .welcome-splash.is-revealing .welcome-kicker,
+  .welcome-splash.is-revealing .welcome-title-rule { animation: none; }
+  .welcome-splash.is-revealing .welcome-type-line { animation: welcome-type-fade .01ms both; animation-delay: 0ms; }
+  .welcome-splash.is-exiting, .entrance-rust.is-exiting { animation-name: login-fade-out; animation-timing-function: linear; }
 }

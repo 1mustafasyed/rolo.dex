@@ -1,0 +1,25 @@
+# Label
+
+- Source kind: owner-supplied readable workspace implementation.
+- Source revision: 370628bb2857ed3ffbfa77f155d8afc17bb09e1d; source file digest: fbc0c7db4221227941271a004bf71db5067aee9d8668f3351d91113cd5934c8c.
+- License/provenance: internal extraction requested by the workspace owner; no app repository LICENSE file. Public dependencies retain their own licenses. External redistribution requires license review.
+- Exact implementation: artifacts/map-rolodex/src/components/ui/label.tsx:1–25.
+- Public exports: Label.
+- Family dependencies: None.
+- Public dependencies: react, @radix-ui/react-label, class-variance-authority.
+- Runtime imports: react, @radix-ui/react-label, @/lib/utils, class-variance-authority.
+- Importance: 2 unique import consumer files.
+- Chunk: 1; status: implemented.
+
+## Consumer evidence
+- artifacts/map-rolodex/src/components/ui/field.tsx:4.
+- artifacts/map-rolodex/src/components/ui/form.tsx:12.
+
+## Styling and runtime evidence
+- artifacts/map-rolodex/src/index.css:6–69: semantic tokens and Tailwind bindings.
+- artifacts/map-rolodex/src/index.css:257–276: active charcoal/rust variables.
+- artifacts/map-rolodex/src/lib/utils.ts:1–7: clsx and tailwind-merge.
+- artifacts/map-rolodex/src/index.css:124–129, 185–190, 300–313, 360–365, 398–413: native product controls and captions, distinct from the source primitive APIs.
+
+## Build contract
+Copied the complete source implementation; only @/lib/utils → ../../lib/utils changed. Public props, forwarded refs, DOM composition, classes, and behavior libraries are preserved. The role mapping to active product colors is documented in source-scope.md.

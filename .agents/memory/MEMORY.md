@@ -1,2 +1,5 @@
 - [Bulk connector publishing](bulk-connector-publishing.md) — transfer filenames as small metadata, not entire file payloads, when publishing repository snapshots through a connector.
 - [Implicit toolchain installation](implicit-toolchain-installation.md) — invoking a language command may auto-add its module to the workspace; remove it after temporary analysis.
+- [Shared demo boundaries](demo-account-boundaries.md) — demo work is frontend-only; existing shared account, Edge Function, auth settings, and RLS must remain untouched.
+- [Supabase logout failures](supabase-logout-failures.md) — remote logout errors can still clear local auth; failure-retention flows must defer events and restore the prior session.
+- [Entry-surface design-system scope](entry-design-system-scope.md) — shared styling is approved for entrance panes only; login and map migration need separate approval.

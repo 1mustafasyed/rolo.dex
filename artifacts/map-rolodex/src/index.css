@@ -439,3 +439,21 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
   .modal-body { padding: 19px 20px 22px; }
   .form-actions { flex-wrap: wrap; }
 }
+
+.auth-card .demo-login-btn { width: 100%; margin-top: 12px; padding: 13px; }
+.demo-banner { position: absolute; z-index: 10; top: 0; left: 0; right: 0; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 23px; background: #302f2e; border-bottom: 1px solid #77716a; color: #eeeae4; font-size: 12px; }
+.demo-banner strong { color: #dfa18a; font-weight: 600; }
+.demo-banner .ghost-btn { padding: 7px 12px; }
+.demo-shell .atlas-brand { top: 76px; }
+.demo-shell .account-menu { top: 75px; }
+.demo-shell .left-panel, .demo-shell .detail-panel { top: 148px; }
+.demo-shell .detail-panel { max-height: calc(100dvh - 216px); }
+.demo-shell .map-stage { top: 52px; }
+@media (max-width: 680px) {
+  .demo-banner { padding: 8px 16px; }
+  .demo-banner-note { display: none; }
+  .demo-shell .atlas-brand { top: 69px; }
+  .demo-shell .account-menu { top: 66px; }
+  .demo-shell .left-panel, .demo-shell .detail-panel { top: auto; }
+  .demo-shell .detail-panel { max-height: min(82dvh, calc(100dvh - 120px)); }
+}
